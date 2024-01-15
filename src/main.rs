@@ -26,8 +26,7 @@ use minigrep::Config;
 
 fn main() {
     // 12.1 接收命令行参数: 可执行程序, arg, arg, arg...
-    let args: Vec<String> = env::args().collect();
-    let config: Config = Config::new(&args).unwrap_or_else(|err|{
+    let config: Config = Config::new(env::args()).unwrap_or_else(|err|{
         // 12.6 将错误消息写入标准错误而不是标准输出
         eprintln!("Problem parsing arguments: {}", err);
         process::exit(1);

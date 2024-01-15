@@ -1,21 +1,28 @@
 use std::{fs, env, error::Error};
 
 #[derive(Debug)]
-pub struct Config<'a> {
-    pub query: &'a String,
-    pub filename: &'a String,
+pub struct Config {
+    pub query: String,
+    pub filename: String,
     pub case_sensitive: bool,
 }
 
 // 12.3 重构:改进模块和错误处理
-impl<'a> Config<'a> {
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
+impl Config{
+    pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
         if args.len() < 3 {
             return Err("not enough arguments")
         }
 
-        let query = &args[1];
-        let filename = &args[2];
+        args.next();
+        let query = match args.next(){
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a file name"),
+        };
         // 12.5 环境变量使用 && 大小写不敏感
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err(); // 默认大小写敏感: true
         Ok(Config {query, filename, case_sensitive})
@@ -24,26 +31,19 @@ impl<'a> Config<'a> {
 
 // 12.4 2.实现测试功能 查询文本
 pub fn search_case_sensitive<'a>(query: &str, context: &'a str) -> Vec<&'a str>{
-    let mut result = Vec::new();
-    for line in context.lines(){
-        if line.contains(query){
-            result.push(line);
-        }
-    }
-    result
+    context.lines()
+        .into_iter()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 // 12.5 环境变量使用 && 大小写不敏感
 fn search_case_insensitive<'a>(query: &str, context: &'a str) -> Vec<&'a str> {
-    let query = query.to_lowercase();
-
-    let mut result = Vec::new();
-    for line in context.lines(){
-        if line.to_lowercase().contains(&query){
-            result.push(line);
-        }
-    }
-    result
+    let query = query.to_lowercase(); // 转换为小写, 新对象
+    context.lines()
+        .into_iter()
+        .filter(|line| line.to_lowercase().contains(&query))
+        .collect()
 }
 
 
